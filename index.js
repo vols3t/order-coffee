@@ -57,3 +57,93 @@ document.querySelector('.order-form').addEventListener('click', (e) => {
         }
     }
 });
+
+function declineBeverage(count) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) {
+    return "напиток";
+  }
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    return "напитка";
+  }
+  return "напитков";
+}
+
+document.querySelector(".order-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const beverages = document.querySelectorAll(".beverage");
+  const count = beverages.length;
+  const word = declineBeverage(count);
+  document.querySelector(".beverage-count-message").textContent =
+    `Вы заказали ${count} ${word}`;
+
+  const tableBody = document.getElementById("order-table-body");
+  tableBody.innerHTML = "";
+
+  beverages.forEach((beverage) => {
+    const select = beverage.querySelector("select");
+    const drinkName = select.options[select.selectedIndex].text;
+
+    const milkRadio = beverage.querySelector('input[type="radio"]:checked');
+    const milkName = milkRadio ? milkRadio.nextElementSibling.textContent : "";
+
+    const optionCheckboxes = beverage.querySelectorAll(
+      'input[type="checkbox"]:checked',
+    );
+    const optionsNames = Array.from(optionCheckboxes)
+      .map((cb) => cb.nextElementSibling.textContent)
+      .join(", ");
+
+    const wishesOutput = beverage.querySelector(".wishes-output").innerHTML;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${drinkName}</td>
+      <td>${milkName}</td>
+      <td>${optionsNames || "-"}</td>
+      <td>${wishesOutput || "-"}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  document.getElementById("order-modal").classList.remove("hidden");
+});
+
+document
+  .getElementById("confirm-order-button")
+  .addEventListener("click", () => {
+    const timeInput = document.getElementById("order-time");
+    const selectedTime = timeInput.value;
+
+    if (!selectedTime) {
+      timeInput.style.borderColor = "red";
+      alert("Пожалуйста, выберите время заказа");
+      return;
+    }
+
+    const [hours, minutes] = selectedTime.split(":").map(Number);
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+
+    if (
+      hours < currentHours ||
+      (hours === currentHours && minutes < currentMinutes)
+    ) {
+      timeInput.style.borderColor = "red";
+      alert(
+        "Мы не умеем перемещаться во времени. Выберите время позже, чем текущее",
+      );
+    } else {
+      timeInput.style.borderColor = "";
+      document.getElementById("order-modal").classList.add("hidden");
+    }
+  });
+
+document.querySelector(".close-modal").addEventListener("click", () => {
+  document.getElementById("order-modal").classList.add("hidden");
+});
+
+updateRemoveButtons();
